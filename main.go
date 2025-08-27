@@ -6,32 +6,65 @@ import (
 
 	h2m "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/charmbracelet/bubbles/viewport"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 	"github.com/mmcdole/gofeed"
 )
 
-func main() {
-	/*
-			in := `# Hello World
+type model struct {
+	vp      viewport.Model
+	content string
+	ready   bool
+}
 
-				This is a simple example of Markdown rendering with Glamour!
-				Check out the [other examples](https://github.com/charmbracelet/glamour/tree/master/examples) too.
+func (m model) Init() tea.Cmd {
+	return nil
+}
 
-				Bye!
-		   	 `
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
 
-			out, err := glamour.Render(in, "dark")
-			if err != nil {
-				fmt.Println("Error rendering markdown:", err)
-				return
-			}
-			fmt.Print(out)*/
+	case tea.WindowSizeMsg:
 
+		if !m.ready {
+			m.vp = viewport.New(msg.Width, msg.Height-2) // leave room for header/footer
+			m.vp.MouseWheelEnabled = true
+			m.vp.SetContent(m.content)
+			m.ready = true
+		} else {
+			m.vp.Width = msg.Width
+			m.vp.Height = msg.Height - 2
+		}
+		return m, nil
+
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "q", "ctrl+c":
+			return m, tea.Quit
+		}
+	}
+
+	var cmd tea.Cmd
+	m.vp, cmd = m.vp.Update(msg)
+	return m, cmd
+}
+
+func (m model) View() string {
+	if !m.ready {
+		return "loading...\n"
+	}
+	header := "Scrollable output (viewport)\n"
+	footer := fmt.Sprintf("\nScroll: %.0f%% — press q to quit", m.vp.ScrollPercent()*100)
+	return header + m.vp.View() + footer
+}
+
+func getMarkdown() string {
 	fp := gofeed.NewParser()
 
-	feed, err := fp.ParseURL("https://www.uio.no/studier/emner/matnat/ifi/IN5040/h25/beskjeder/?vrtx=feed")
+	feed, err := fp.ParseURL("https://www.uio.no/studier/emner/matnat/ifi/IN5040/h24/beskjeder/?vrtx=feed")
 	if err != nil {
-		return
+		return ""
 	}
 
 	for _, item := range feed.Items {
@@ -73,6 +106,16 @@ func main() {
 			fmt.Println("Error rendering markdown:", err)
 			continue
 		}
-		fmt.Print(out)
+		//fmt.Print(out)
+		return out
 	}
+	return ""
+}
+
+func main() {
+	p := tea.NewProgram(model{content: getMarkdown()},
+		tea.WithAltScreen(),
+		tea.WithMouseCellMotion())
+
+	p.Run()
 }
