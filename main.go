@@ -2,14 +2,11 @@ package main
 
 import (
 	"fmt"
-	"net/http"
+	"strings"
 
-	h2m "github.com/JohannesKaufmann/html-to-markdown"
-	"github.com/PuerkitoBio/goquery"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/glamour"
-	"github.com/mmcdole/gofeed"
+	"github.com/willbehn/go-ifi-feed/feed"
 )
 
 type model struct {
@@ -59,61 +56,8 @@ func (m model) View() string {
 	return header + m.vp.View() + footer
 }
 
-func getMarkdown() string {
-	fp := gofeed.NewParser()
-
-	feed, err := fp.ParseURL("https://www.uio.no/studier/emner/matnat/ifi/IN5040/h24/beskjeder/?vrtx=feed")
-	if err != nil {
-		return ""
-	}
-
-	for _, item := range feed.Items {
-		//fmt.Println(item.Title, item.Link)
-
-		resp, err := http.Get(item.Link)
-		if err != nil {
-			fmt.Println("Error fetching link", err)
-			continue
-		}
-		defer resp.Body.Close()
-
-		doc, err := goquery.NewDocumentFromReader(resp.Body)
-		if err != nil {
-			fmt.Println("Html parse error", err)
-			continue
-		}
-
-		htmlSelection := doc.Find("#right-main")
-		if htmlSelection.Length() == 0 {
-			fmt.Println("Error findin html tag", item.Link)
-			continue
-		}
-
-		html, err := htmlSelection.Html()
-		if err != nil {
-			continue
-		}
-
-		converter := h2m.NewConverter("", true, nil)
-		markdown, err := converter.ConvertString(html)
-		if err != nil {
-			fmt.Println("Error converting html to markdown:", err)
-			continue
-		}
-
-		out, err := glamour.Render(markdown, "dark")
-		if err != nil {
-			fmt.Println("Error rendering markdown:", err)
-			continue
-		}
-		//fmt.Print(out)
-		return out
-	}
-	return ""
-}
-
 func main() {
-	p := tea.NewProgram(model{content: getMarkdown()},
+	p := tea.NewProgram(model{content: strings.Join(feed.Fetch("IN1000"), "")},
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion())
 
