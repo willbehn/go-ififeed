@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/viewport"
@@ -51,15 +52,40 @@ func (m model) View() string {
 	if !m.ready {
 		return "loading...\n"
 	}
-	header := "Scrollable output (viewport)\n"
+	header := "ifi feed 📚\n"
 	footer := fmt.Sprintf("\nScroll: %.0f%% — press q to quit", m.vp.ScrollPercent()*100)
 	return header + m.vp.View() + footer
 }
 
-func main() {
-	p := tea.NewProgram(model{content: strings.Join(feed.Fetch("IN1000"), "")},
+func runTui(courses []string) {
+	p := tea.NewProgram(model{content: strings.Join(feed.Fetch(courses), "")},
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion())
 
 	p.Run()
+}
+
+func cmdSubscribe(courses []string) {
+	for _, course := range courses {
+		fmt.Print(course)
+	}
+
+}
+
+func main() {
+
+	args := os.Args
+
+	if len(args) > 1 {
+		if args[1] == "subscribe" {
+			cmdSubscribe(args[2:])
+		}
+
+	} else {
+
+		courses := []string{"IN1000", "IN1020"}
+
+		runTui(courses)
+	}
+
 }
