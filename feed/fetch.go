@@ -3,12 +3,20 @@ package feed
 import (
 	"fmt"
 	"net/http"
+	"sort"
+	"time"
 
 	h2m "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/charmbracelet/glamour"
 	"github.com/mmcdole/gofeed"
 )
+
+type Message struct {
+	Timestamp time.Time
+	Content   string
+	Course    string
+}
 
 func fetchRssFeed(course string) *gofeed.Feed {
 	fp := gofeed.NewParser()
@@ -52,8 +60,8 @@ func convertToMarkdown(html string) string {
 	return markdown
 }
 
-func Fetch(courses []string) []string {
-	var results []string
+func Fetch(courses []string) []Message {
+	var results []Message
 
 	for _, course := range courses {
 
@@ -68,9 +76,12 @@ func Fetch(courses []string) []string {
 			defer resp.Body.Close()
 
 			html := fetchHttpItem(resp)
-			htmlTs := html + "<p>" + item.PublishedParsed.Format("2006-01-02 15:04") + "</p>"
+			timePublished := item.PublishedParsed
+			htmlTs := html + "<p>" + timePublished.Format("2006-01-02 15:04") + "</p>"
 
 			markdown := convertToMarkdown(htmlTs)
+
+			markdown = "# " + course + "\n" + markdown
 
 			out, err := glamour.Render(markdown, "dark")
 			if err != nil {
@@ -78,10 +89,16 @@ func Fetch(courses []string) []string {
 				continue
 			}
 
-			results = append(results, out)
+			newMessage := Message{Content: out, Timestamp: *timePublished}
+
+			results = append(results, newMessage)
 
 			resp.Body.Close()
 		}
 	}
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].Timestamp.After(results[j].Timestamp)
+	})
+
 	return results
 }
