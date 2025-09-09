@@ -10,6 +10,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/charmbracelet/glamour"
 	"github.com/mmcdole/gofeed"
+	"github.com/willbehn/go-ifi-feed/models"
 )
 
 type Message struct {
@@ -60,12 +61,12 @@ func convertToMarkdown(html string) string {
 	return markdown
 }
 
-func Fetch(courses []string) []Message {
+func Fetch(courses models.Courses) []Message {
 	var results []Message
 
-	for _, course := range courses {
+	for _, course := range courses.Courses {
 
-		feed := fetchRssFeed(course)
+		feed := fetchRssFeed(course.Code)
 
 		for _, item := range feed.Items {
 			resp, err := http.Get(item.Link)
@@ -81,7 +82,7 @@ func Fetch(courses []string) []Message {
 
 			markdown := convertToMarkdown(htmlTs)
 
-			markdown = "## " + course + "\n" + markdown
+			markdown = "## " + course.Code + "\n" + markdown
 
 			out, err := glamour.Render(markdown, "dark")
 			if err != nil {

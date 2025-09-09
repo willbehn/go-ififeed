@@ -5,8 +5,11 @@ go 1.24.0
 require (
 	github.com/JohannesKaufmann/html-to-markdown v1.6.0
 	github.com/PuerkitoBio/goquery v1.9.2
+	github.com/charmbracelet/bubbles v0.21.0
+	github.com/charmbracelet/bubbletea v1.3.6
 	github.com/charmbracelet/glamour v0.10.0
 	github.com/mmcdole/gofeed v1.3.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -14,8 +17,6 @@ require (
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/charmbracelet/bubbles v0.21.0 // indirect
-	github.com/charmbracelet/bubbletea v1.3.6 // indirect
 	github.com/charmbracelet/colorprofile v0.3.2 // indirect
 	github.com/charmbracelet/lipgloss v1.1.1-0.20250404203927-76690c660834 // indirect
 	github.com/charmbracelet/x/ansi v0.10.1 // indirect
