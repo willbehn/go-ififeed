@@ -73,15 +73,15 @@ func Fetch(courses []string) []Message {
 				fmt.Println("Error fetching link", err)
 				continue
 			}
-			defer resp.Body.Close()
-
 			html := fetchHttpItem(resp)
+			resp.Body.Close()
+
 			timePublished := item.PublishedParsed
 			htmlTs := html + "<p>" + timePublished.Format("2006-01-02 15:04") + "</p>"
 
 			markdown := convertToMarkdown(htmlTs)
 
-			markdown = "# " + course + "\n" + markdown
+			markdown = "## " + course + "\n" + markdown
 
 			out, err := glamour.Render(markdown, "dark")
 			if err != nil {
