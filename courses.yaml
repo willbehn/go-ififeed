@@ -1,9 +1,9 @@
 Courses:
-  - Code: "IN5060"
-    Title: "Kvantitativ ytelsesanalyse"
+  - code: "IN5060"
+    title: "Kvantitativ ytelsesanalyse"
 
-  - Code: "IN5040"
-    Title: "Advanced database systems for big data"
+  - code: "IN5040"
+    title: "Advanced database systems for big data"
 
-  - Code: "IN3120"
-    Title: "Søketeknologi"
+  - code: "IN3120"
+    title: "Søketeknologi"

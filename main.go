@@ -3,24 +3,14 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/willbehn/go-ifi-feed/feed"
 	"github.com/willbehn/go-ifi-feed/models"
 	yaml "gopkg.in/yaml.v3"
 )
 
-func joinMessages(courses models.Courses) string {
-	var contents []string
-	for _, message := range feed.Fetch(courses) {
-		contents = append(contents, message.Content)
-	}
-	return strings.Join(contents, "")
-}
-
 func runTui(courses models.Courses) {
-	p := tea.NewProgram(Model{content: joinMessages(courses)},
+	p := tea.NewProgram(Model{content: CombineMessages(courses)},
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion())
 

@@ -82,7 +82,7 @@ func Fetch(courses models.Courses) []Message {
 
 			markdown := convertToMarkdown(htmlTs)
 
-			markdown = "## " + course.Code + "\n" + markdown
+			markdown = "## " + course.Code + " " + course.Title + "\n" + markdown
 
 			out, err := glamour.Render(markdown, "dark")
 			if err != nil {
@@ -93,8 +93,6 @@ func Fetch(courses models.Courses) []Message {
 			newMessage := Message{Content: out, Timestamp: *timePublished}
 
 			results = append(results, newMessage)
-
-			resp.Body.Close()
 		}
 	}
 	sort.Slice(results, func(i, j int) bool {

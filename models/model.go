@@ -1,8 +1,8 @@
 package models
 
 type Course struct {
-	Code  string `yaml:"Code"`
-	Title string `yaml:"Title"`
+	Code  string `yaml:"code"`
+	Title string `yaml:"title"`
 }
 
 type Courses struct {

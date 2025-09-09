@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/willbehn/go-ifi-feed/feed"
+	"github.com/willbehn/go-ifi-feed/models"
 )
 
 type Model struct {
@@ -52,4 +55,12 @@ func (m Model) View() string {
 	header := "ifi feed 📚\n"
 	footer := fmt.Sprintf("\nScroll: %.0f%% — press q to quit", m.vp.ScrollPercent()*100)
 	return header + m.vp.View() + footer
+}
+
+func CombineMessages(courses models.Courses) string {
+	var contents []string
+	for _, message := range feed.Fetch(courses) {
+		contents = append(contents, message.Content)
+	}
+	return strings.Join(contents, "")
 }
