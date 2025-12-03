@@ -25,7 +25,7 @@ func cmdSubscribe(courses []string) {
 }
 
 func readCourses() (models.Courses, error) {
-	file, err := os.Open("courses.yaml")
+	file, err := os.Open("/Users/williambehn/code/projects/go-ifi-feed/courses.yaml")
 
 	if err != nil {
 		return models.Courses{}, err

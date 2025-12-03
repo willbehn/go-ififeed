@@ -24,15 +24,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 
 	case tea.WindowSizeMsg:
+		header := models.Banner
+		headerLines := strings.Count(header, "\n")
+		footerLines := 2
+
+		availHeight := max(msg.Height-headerLines-footerLines, 1)
 
 		if !m.ready {
-			m.vp = viewport.New(msg.Width, msg.Height-2)
+			m.vp = viewport.New(msg.Width, availHeight)
 			m.vp.MouseWheelEnabled = true
 			m.vp.SetContent(m.content)
 			m.ready = true
 		} else {
 			m.vp.Width = msg.Width
-			m.vp.Height = msg.Height - 2
+			m.vp.Height = availHeight
 		}
 		return m, nil
 
@@ -52,7 +57,7 @@ func (m Model) View() string {
 	if !m.ready {
 		return "loading...\n"
 	}
-	header := "ifi feed 📚\n"
+	header := models.Banner
 	footer := fmt.Sprintf("\nScroll: %.0f%% — press q to quit", m.vp.ScrollPercent()*100)
 	return header + m.vp.View() + footer
 }
