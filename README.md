@@ -1,6 +1,6 @@
 # ififeed
 
-![Made with VHS](https://vhs.charm.sh/vhs-56bf3ZDqfNxs40A9SYrn4H.gif)
+![Made with VHS](https://vhs.charm.sh/vhs-2PaSHiu0PvzRdWDywIFIQP.gif)
 
 **ififeed** er et lite verktøy for deg som er IFI-student og er lei av å
 måtte klikke deg inn på *Mine studier* eller semestersiden for hvert enkelt
