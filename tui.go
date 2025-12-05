@@ -69,7 +69,7 @@ func CombineMessages(courses models.Courses) string {
 		contents = append(contents, message.Content)
 	}
 
-	var allMessages = strings.Join(contents, "")
+	var allMessages = feed.ConvertToMarkdown(strings.Join(contents, ""))
 	out, err := glamour.Render(allMessages, "dark")
 
 	if err != nil {

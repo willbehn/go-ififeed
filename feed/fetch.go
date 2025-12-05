@@ -21,7 +21,10 @@ type Message struct {
 func fetchRssFeed(course string) *gofeed.Feed {
 	fp := gofeed.NewParser()
 
-	feed, err := fp.ParseURL("https://www.uio.no/studier/emner/matnat/ifi/" + course + "/h25/beskjeder/?vrtx=feed")
+	feed, err := fp.ParseURL(fmt.Sprintf(
+		"https://www.uio.no/studier/emner/matnat/ifi/%s/h25/beskjeder/?vrtx=feed",
+		course,
+	))
 	if err != nil {
 		return nil
 	}
@@ -47,10 +50,10 @@ func fetchHttpItem(resp *http.Response) string {
 	htmlH, _ := headerSelection.Html()
 	htmlC, _ := contentSelection.Html()
 
-	return "<h1>" + htmlH + "</h1>" + htmlC
+	return fmt.Sprintf("<h1>%s</h1>%s", htmlH, htmlC)
 }
 
-func convertToMarkdown(html string) string {
+func ConvertToMarkdown(html string) string {
 	converter := h2m.NewConverter("", true, nil)
 	markdown, err := converter.ConvertString(html)
 
@@ -80,11 +83,8 @@ func Fetch(courses models.Courses) []Message {
 			timePublished := item.PublishedParsed
 			htmlTs := html + "<p>" + timePublished.Format("2006-01-02 15:04") + "</p>"
 
-			markdown := convertToMarkdown(htmlTs)
-
-			markdown = "\n## " + course.Code + " " + course.Title + "\n" + markdown
-
-			newMessage := Message{Content: markdown, Timestamp: *timePublished}
+			finalHtml := "<h2> " + course.Code + " " + course.Title + "<h2/>" + htmlTs
+			newMessage := Message{Content: finalHtml, Timestamp: *timePublished}
 
 			results = append(results, newMessage)
 		}
