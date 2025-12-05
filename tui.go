@@ -26,16 +26,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 
 	case tea.WindowSizeMsg:
-		header := models.Banner
-		headerLines := strings.Count(header, "\n")
 		footerLines := 3
 
-		availHeight := max(msg.Height-headerLines-footerLines, 1)
+		availHeight := max(msg.Height-footerLines, 1)
 
 		if !m.ready {
 			m.vp = viewport.New(msg.Width, availHeight)
 			m.vp.MouseWheelEnabled = true
-			m.vp.SetContent(m.content)
+
+			style := lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffffff"))
+			colored := style.Render(models.Banner)
+
+			m.vp.SetContent(colored + "\n" + m.content)
 			m.ready = true
 		} else {
 			m.vp.Width = msg.Width
@@ -59,11 +61,9 @@ func (m Model) View() string {
 	if !m.ready {
 		return "loading...\n"
 	}
-	style := lipgloss.NewStyle().Foreground(lipgloss.Color("#ADD8E6"))
-	colored := style.Render(models.Banner)
-	header := colored + "\n"
+
 	footer := fmt.Sprintf("\n\n  Scroll: %.0f%% — press q to quit", m.vp.ScrollPercent()*100)
-	return header + m.vp.View() + footer
+	return m.vp.View() + footer
 }
 
 func CombineMessages(courses models.Courses) string {
