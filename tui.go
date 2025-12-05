@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/willbehn/go-ifi-feed/feed"
 	"github.com/willbehn/go-ifi-feed/models"
 )
@@ -58,7 +59,9 @@ func (m Model) View() string {
 	if !m.ready {
 		return "loading...\n"
 	}
-	header := models.Banner
+	style := lipgloss.NewStyle().Foreground(lipgloss.Color("#ADD8E6"))
+	colored := style.Render(models.Banner)
+	header := colored + "\n"
 	footer := fmt.Sprintf("\n\n  Scroll: %.0f%% — press q to quit", m.vp.ScrollPercent()*100)
 	return header + m.vp.View() + footer
 }

@@ -1,16 +1,15 @@
 # ififeed
 
-![Made with VHS](https://vhs.charm.sh/vhs-2PaSHiu0PvzRdWDywIFIQP.gif)
+![Made with VHS](https://vhs.charm.sh/vhs-62s4nmKzDhCEjTvs8N31jV.gif)
 
-**ififeed** er et lite verktøy for deg som er IFI-student og er lei av å
-måtte klikke deg inn på *Mine studier* eller semestersiden for hvert enkelt
+**ififeed** er et verktøy for deg som er IFI-student og er lei av å
+måtte klikke deg inn på Mine studier eller semestersiden for hvert enkelt
 emne bare for å sjekke nye beskjeder.
 
 Med **ififeed** kan du hente alle beskjeder fra alle emner
-du tar, rett i terminalen. Ingen flere avbrekk fra den produktive progge-økta!
+du tar rett i terminalen! Ingen flere avbrekk fra den produktive progge-økta!
 
-## 🚀 Kom i gang
-
+## Kom i gang
 ### 1. Klon repoet
 
 ``` bash
@@ -19,8 +18,7 @@ cd go-ififeed
 ```
 
 ### 2. Legg inn ønskede kurs
-
-Konfigurer hvilke emner du tar ved å legge dem inn i konfigurasjonsfilen
+Konfigurer hvilke emner du tar ved å legge dem inn i config-filen
 (`courses.yaml`) slik:
 
 ``` yaml

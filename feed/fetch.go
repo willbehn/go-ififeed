@@ -38,7 +38,7 @@ func fetchRssFeed(course string) *gofeed.Feed {
 	return feed
 }
 
-func fetchHttpItem(resp *http.Response) string {
+func fetchHttpItem(resp *http.Response, course string, title string) string {
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
 		fmt.Println("Html parse error", err)
@@ -56,7 +56,13 @@ func fetchHttpItem(resp *http.Response) string {
 	htmlH, _ := headerSelection.Html()
 	htmlC, _ := contentSelection.Html()
 
-	return fmt.Sprintf("<h1>%s</h1>%s", htmlH, htmlC)
+	htmlCourse := fmt.Sprintf(
+		`<p><code>%s</code> – <b>%s</b></p>`,
+		course,
+		title,
+	)
+
+	return fmt.Sprintf("<h1>🔔 %s</h1>%s%s", htmlH, htmlCourse, htmlC)
 }
 
 func ConvertToMarkdown(html string) string {
@@ -82,14 +88,13 @@ func singleFeed(course models.Course) []Message {
 			continue
 		}
 
-		html := fetchHttpItem(resp)
+		html := fetchHttpItem(resp, course.Code, course.Title)
 		resp.Body.Close()
 
 		timePublished := item.PublishedParsed
-		htmlTs := html + "<p>" + timePublished.Format("2006-01-02 15:04") + "</p>"
+		htmlTs := html + "<p>" + timePublished.Format("2006-01-02 15:04") + "</p><hr/>"
 
-		finalHtml := "<h2> " + course.Code + " " + course.Title + "<h2/>" + htmlTs
-		newMessage := Message{Content: finalHtml, Timestamp: *timePublished}
+		newMessage := Message{Content: htmlTs, Timestamp: *timePublished}
 
 		results = append(results, newMessage)
 	}
