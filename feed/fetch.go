@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"sync"
 	"time"
 
 	h2m "github.com/JohannesKaufmann/html-to-markdown"
@@ -16,6 +17,11 @@ type Message struct {
 	Timestamp time.Time
 	Content   string
 	Course    string
+}
+
+var httpClient = &http.Client{
+	Transport: &http.Transport{},
+	Timeout:   15 * time.Second,
 }
 
 func fetchRssFeed(course string) *gofeed.Feed {
@@ -64,31 +70,57 @@ func ConvertToMarkdown(html string) string {
 	return markdown
 }
 
+func singleFeed(course models.Course) []Message {
+	var results []Message
+
+	feed := fetchRssFeed(course.Code)
+
+	for _, item := range feed.Items {
+		resp, err := httpClient.Get(item.Link)
+		if err != nil {
+			fmt.Println("Error fetching link", err)
+			continue
+		}
+
+		html := fetchHttpItem(resp)
+		resp.Body.Close()
+
+		timePublished := item.PublishedParsed
+		htmlTs := html + "<p>" + timePublished.Format("2006-01-02 15:04") + "</p>"
+
+		finalHtml := "<h2> " + course.Code + " " + course.Title + "<h2/>" + htmlTs
+		newMessage := Message{Content: finalHtml, Timestamp: *timePublished}
+
+		results = append(results, newMessage)
+	}
+	return results
+}
+
 func Fetch(courses models.Courses) []Message {
 	var results []Message
 
+	msgChannel := make(chan Message)
+	var wg sync.WaitGroup
+	wg.Add(len(courses.Courses))
+
 	for _, course := range courses.Courses {
-
-		feed := fetchRssFeed(course.Code)
-
-		for _, item := range feed.Items {
-			resp, err := http.Get(item.Link)
-			if err != nil {
-				fmt.Println("Error fetching link", err)
-				continue
+		go func(c models.Course) {
+			defer wg.Done()
+			for _, msg := range singleFeed(c) {
+				msgChannel <- msg
 			}
-			html := fetchHttpItem(resp)
-			resp.Body.Close()
-
-			timePublished := item.PublishedParsed
-			htmlTs := html + "<p>" + timePublished.Format("2006-01-02 15:04") + "</p>"
-
-			finalHtml := "<h2> " + course.Code + " " + course.Title + "<h2/>" + htmlTs
-			newMessage := Message{Content: finalHtml, Timestamp: *timePublished}
-
-			results = append(results, newMessage)
-		}
+		}(course)
 	}
+
+	go func() {
+		wg.Wait()
+		close(msgChannel)
+	}()
+
+	for m := range msgChannel {
+		results = append(results, m)
+	}
+
 	sort.Slice(results, func(i, j int) bool {
 		return results[i].Timestamp.After(results[j].Timestamp)
 	})
