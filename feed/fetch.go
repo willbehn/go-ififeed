@@ -8,7 +8,6 @@ import (
 
 	h2m "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/charmbracelet/glamour"
 	"github.com/mmcdole/gofeed"
 	"github.com/willbehn/go-ifi-feed/models"
 )
@@ -26,6 +25,7 @@ func fetchRssFeed(course string) *gofeed.Feed {
 	if err != nil {
 		return nil
 	}
+
 	return feed
 }
 
@@ -82,15 +82,9 @@ func Fetch(courses models.Courses) []Message {
 
 			markdown := convertToMarkdown(htmlTs)
 
-			markdown = "## " + course.Code + " " + course.Title + "\n" + markdown
+			markdown = "\n## " + course.Code + " " + course.Title + "\n" + markdown
 
-			out, err := glamour.Render(markdown, "dark")
-			if err != nil {
-				fmt.Println("Error rendering markdown:", err)
-				continue
-			}
-
-			newMessage := Message{Content: out, Timestamp: *timePublished}
+			newMessage := Message{Content: markdown, Timestamp: *timePublished}
 
 			results = append(results, newMessage)
 		}

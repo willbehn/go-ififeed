@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
 	"github.com/willbehn/go-ifi-feed/feed"
 	"github.com/willbehn/go-ifi-feed/models"
 )
@@ -26,7 +27,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		header := models.Banner
 		headerLines := strings.Count(header, "\n")
-		footerLines := 2
+		footerLines := 3
 
 		availHeight := max(msg.Height-headerLines-footerLines, 1)
 
@@ -58,7 +59,7 @@ func (m Model) View() string {
 		return "loading...\n"
 	}
 	header := models.Banner
-	footer := fmt.Sprintf("\nScroll: %.0f%% — press q to quit", m.vp.ScrollPercent()*100)
+	footer := fmt.Sprintf("\n\n  Scroll: %.0f%% — press q to quit", m.vp.ScrollPercent()*100)
 	return header + m.vp.View() + footer
 }
 
@@ -67,5 +68,13 @@ func CombineMessages(courses models.Courses) string {
 	for _, message := range feed.Fetch(courses) {
 		contents = append(contents, message.Content)
 	}
-	return strings.Join(contents, "")
+
+	var allMessages = strings.Join(contents, "")
+	out, err := glamour.Render(allMessages, "dark")
+
+	if err != nil {
+		fmt.Println("Error rendering markdown:", err)
+	}
+
+	return out
 }
