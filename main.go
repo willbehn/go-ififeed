@@ -15,7 +15,7 @@ func runTui(courses models.Courses) {
 	go feed.FetchStream(courses, ch)
 
 	p := tea.NewProgram(
-		Model{loading: true, msgCh: ch},
+		newModel(ch),
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion(),
 	)

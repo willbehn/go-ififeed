@@ -4,23 +4,43 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/willbehn/go-ifi-feed/feed"
-	"github.com/willbehn/go-ifi-feed/models"
+)
+
+// TODO gjør disse velgbare i tui
+const (
+	AsciiStyle      = "ascii"
+	AutoStyle       = "auto"
+	DarkStyle       = "dark"
+	DraculaStyle    = "dracula"
+	TokyoNightStyle = "tokyo-night"
+	LightStyle      = "light"
+	NoTTYStyle      = "notty"
+	PinkStyle       = "pink"
 )
 
 type itemMsg struct{ content string }
 type doneMsg struct{}
 
 type Model struct {
-	vp      viewport.Model
-	content string
-	ready   bool
-	loading bool
-	msgCh   chan feed.Message
+	vp        viewport.Model
+	content   string
+	ready     bool
+	loading   bool
+	msgCh     chan feed.Message
+	spin      spinner.Model
+	itemCount int
+}
+
+func newModel(ch chan feed.Message) Model {
+	s := spinner.New()
+	s.Spinner = spinner.Dot
+	return Model{loading: true, msgCh: ch, spin: s}
 }
 
 func waitForMsg(ch chan feed.Message) tea.Cmd {
@@ -30,7 +50,7 @@ func waitForMsg(ch chan feed.Message) tea.Cmd {
 			return doneMsg{}
 		}
 		md := feed.ConvertToMarkdown(msg.Content)
-		out, err := glamour.Render(md, "dark")
+		out, err := glamour.Render(md, TokyoNightStyle)
 		if err != nil {
 			return itemMsg{content: md}
 		}
@@ -39,11 +59,10 @@ func waitForMsg(ch chan feed.Message) tea.Cmd {
 }
 
 func (m Model) Init() tea.Cmd {
-	return waitForMsg(m.msgCh)
-}
-
-func banner() string {
-	return lipgloss.NewStyle().Foreground(lipgloss.Color("39")).Bold(true).Render(models.Banner)
+	return tea.Batch(
+		m.spin.Tick,
+		waitForMsg(m.msgCh),
+	)
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -51,8 +70,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case itemMsg:
 		m.content += msg.content
+		m.itemCount++
 		if m.ready {
-			m.vp.SetContent(banner() + "\n" + m.content)
+			m.vp.SetContent(m.content)
 		}
 		return m, waitForMsg(m.msgCh)
 
@@ -60,14 +80,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.loading = false
 		return m, nil
 
+	case spinner.TickMsg:
+		var cmd tea.Cmd
+		m.spin, cmd = m.spin.Update(msg)
+		return m, cmd
+
 	case tea.WindowSizeMsg:
-		footerLines := 3
-		availHeight := max(msg.Height-footerLines, 1)
+		reservedLines := 3
+		availHeight := max(msg.Height-reservedLines, 1)
 
 		if !m.ready {
 			m.vp = viewport.New(msg.Width, availHeight)
 			m.vp.MouseWheelEnabled = true
-			m.vp.SetContent(banner() + "\n" + m.content)
+			m.vp.SetContent(m.content)
 			m.ready = true
 		} else {
 			m.vp.Width = msg.Width
@@ -88,18 +113,28 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
+	subtleStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+	accentStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("39"))
+
 	if !m.ready {
 		return "\n  Loading...\n"
 	}
 
-	subtle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
-	separator := subtle.Render(strings.Repeat("─", m.vp.Width))
+	sep := subtleStyle.Render(strings.Repeat("─", m.vp.Width))
 
-	status := "  q quit"
+	// Footer
+	var footerLeft string
 	if m.loading {
-		status = "  fetching...   q quit"
+		footerLeft = "  " + accentStyle.Render(m.spin.View()) + subtleStyle.Render(fmt.Sprintf(" fetching (%d loaded)", m.itemCount))
+	} else {
+		footerLeft = subtleStyle.Render(fmt.Sprintf(" %d items", m.itemCount))
 	}
-	footer := subtle.Render(fmt.Sprintf("%s   %.0f%%", status, m.vp.ScrollPercent()*100))
 
-	return m.vp.View() + "\n" + separator + "\n" + footer
+	footerMiddle := subtleStyle.Render("ififeed v1")
+	footerRight := subtleStyle.Render(fmt.Sprintf("q quit   %.0f%%  ", m.vp.ScrollPercent()*100))
+
+	gap := max((m.vp.Width-lipgloss.Width(footerLeft)-lipgloss.Width(footerMiddle)-lipgloss.Width(footerRight))/2, 0)
+	footer := footerLeft + strings.Repeat(" ", gap) + footerMiddle + strings.Repeat(" ", gap) + footerRight
+
+	return m.vp.View() + "\n" + sep + "\n" + footer
 }
