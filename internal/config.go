@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"errors"
@@ -29,7 +29,7 @@ func configPath() (string, error) {
 	return filepath.Join(dir, "ififeed", "courses.yaml"), nil
 }
 
-func readCourses() (models.Courses, error) {
+func ReadCourses() (models.Courses, error) {
 	path, err := configPath()
 	if err != nil {
 		return models.Courses{}, err
@@ -57,7 +57,7 @@ func readCourses() (models.Courses, error) {
 	return data, nil
 }
 
-func writeCourses(courses models.Courses) error {
+func WriteCourses(courses models.Courses) error {
 	path, err := configPath()
 	if err != nil {
 		return err
