@@ -12,6 +12,17 @@ import (
 	yaml "gopkg.in/yaml.v3"
 )
 
+const sampleConfig = `
+Courses:
+  - code: "IN1000"
+	title: "Introduksjon til objektorientert programmering"
+	semester: h25
+
+  - code: "IN1010"
+	title: "Objektorientert programmering"
+	semester: h25
+`
+
 func runTui(courses models.Courses) {
 	ch := make(chan feed.Message, 50)
 	go feed.FetchStream(courses, ch)
@@ -24,10 +35,45 @@ func runTui(courses models.Courses) {
 	p.Run()
 }
 
-func cmdSubscribe(courses []string) {
-	for _, course := range courses {
-		fmt.Print(course)
+func cmdAdd(args []string) {
+	if len(args) < 3 {
+		fmt.Println("bruk: ififeed add \"<emnekode>\" \"<semester>\" \"<emnetittel>\"")
+		return
 	}
+
+	course := models.Course{
+		Code:     args[0],
+		Semester: args[1],
+		Title:    args[2],
+	}
+
+	courses, err := readCourses()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	courses.Courses = append(courses.Courses, course)
+
+	path, err := configPath()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	file, err := os.Create(path)
+	if err != nil {
+		fmt.Println("kunne ikke åpne config fil:", err)
+		return
+	}
+	defer file.Close()
+
+	if err := yaml.NewEncoder(file).Encode(courses); err != nil {
+		fmt.Println("kunne ikke skrive til config fil:", err)
+		return
+	}
+
+	fmt.Printf("la til %s (%s)\n", course.Code, course.Semester)
 }
 
 func cmdList(courses models.Courses) {
@@ -35,17 +81,6 @@ func cmdList(courses models.Courses) {
 		fmt.Printf("%s\t%s\t%s\n", c.Code, c.Semester, c.Title)
 	}
 }
-
-const sampleConfig = `
-Courses:
-  - code: "IN1000"
-    title: "Introduksjon til objektorientert programmering"
-    semester: h25
-
-  - code: "IN1010"
-    title: "Objektorientert programmering"
-    semester: h25
-`
 
 func configPath() (string, error) {
 	dir, err := os.UserConfigDir()
@@ -98,7 +133,7 @@ func main() {
 			cmdList(courses)
 
 		case "add":
-			//cmdAdd()
+			cmdAdd(args[2:])
 		}
 
 	} else {
