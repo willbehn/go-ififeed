@@ -30,6 +30,12 @@ func cmdSubscribe(courses []string) {
 	}
 }
 
+func cmdList(courses models.Courses) {
+	for _, c := range courses.Courses {
+		fmt.Printf("%s\t%s\t%s\n", c.Code, c.Semester, c.Title)
+	}
+}
+
 const sampleConfig = `
 Courses:
   - code: "IN1000"
@@ -80,16 +86,22 @@ func readCourses() (models.Courses, error) {
 func main() {
 	args := os.Args
 
+	courses, err := readCourses()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	if len(args) > 1 {
-		if args[1] == "subscribe" || args[1] == "-s" {
-			cmdSubscribe(args[2:])
+		switch args[1] {
+		case "list":
+			cmdList(courses)
+
+		case "add":
+			//cmdAdd()
 		}
+
 	} else {
-		courses, err := readCourses()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
 		runTui(courses)
 	}
 }
