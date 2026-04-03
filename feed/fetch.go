@@ -23,12 +23,12 @@ var httpClient = &http.Client{
 	Timeout:   15 * time.Second,
 }
 
-func fetchRssFeed(course string) *gofeed.Feed {
+func fetchRssFeed(course string, semester string) *gofeed.Feed {
 	fp := gofeed.NewParser()
 
 	feed, err := fp.ParseURL(fmt.Sprintf(
-		"https://www.uio.no/studier/emner/matnat/ifi/%s/h25/beskjeder/?vrtx=feed",
-		course,
+		"https://www.uio.no/studier/emner/matnat/ifi/%s/%s/beskjeder/?vrtx=feed",
+		course, semester,
 	))
 	if err != nil {
 		return nil
@@ -75,7 +75,7 @@ func ConvertToMarkdown(html string) string {
 func singleFeed(course models.Course) []Message {
 	var results []Message
 
-	feed := fetchRssFeed(course.Code)
+	feed := fetchRssFeed(course.Code, course.Semester)
 	if feed == nil {
 		return nil
 	}

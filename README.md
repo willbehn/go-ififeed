@@ -44,6 +44,7 @@ Deretter kan du redigere `courses.yaml` filen ved Ã¥ legge til kursene du tar pÃ
 Courses:
   - code: "<emnekode>"
     title: "<tittel>"
+    semester: "<v25>"
 ```
 
 ### 3. ififeed er klar til bruk!
