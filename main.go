@@ -82,6 +82,59 @@ func cmdList(courses models.Courses) {
 	}
 }
 
+func cmdRemove(args []string) {
+	if len(args) < 2 {
+		fmt.Println("bruk: ififeed remove \"<emnekode>\" \"<semester>\"")
+		return
+	}
+
+	code := args[0]
+	semester := args[1]
+
+	courses, err := readCourses()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	filtered := courses.Courses[:0]
+	removed := false
+	for _, c := range courses.Courses {
+		if c.Code == code && c.Semester == semester {
+			removed = true
+		} else {
+			filtered = append(filtered, c)
+		}
+	}
+
+	if !removed {
+		fmt.Printf("fant ikke %s (%s)\n", code, semester)
+		return
+	}
+
+	courses.Courses = filtered
+
+	path, err := configPath()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	file, err := os.Create(path)
+	if err != nil {
+		fmt.Println("kunne ikke åpne config fil:", err)
+		return
+	}
+	defer file.Close()
+
+	if err := yaml.NewEncoder(file).Encode(courses); err != nil {
+		fmt.Println("kunne ikke skrive til config fil:", err)
+		return
+	}
+
+	fmt.Printf("fjernet %s (%s)\n", code, semester)
+}
+
 func configPath() (string, error) {
 	dir, err := os.UserConfigDir()
 	if err != nil {
@@ -131,9 +184,10 @@ func main() {
 		switch args[1] {
 		case "list":
 			cmdList(courses)
-
 		case "add":
 			cmdAdd(args[2:])
+		case "remove":
+			cmdRemove(args[2:])
 		}
 
 	} else {
