@@ -6,6 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/spf13/cobra"
 	"github.com/willbehn/go-ififeed/feed"
 	"github.com/willbehn/go-ififeed/models"
 )
@@ -28,16 +29,20 @@ func runTui(courses models.Courses) {
 	p.Run()
 }
 
-func cmdAdd(args []string) {
-	if len(args) < 3 {
-		fmt.Printf("%s bruk: ififeed add \"<emnekode>\" \"<semester>\" \"<emnetittel>\"\n", prefix)
-		return
+func cmdList(courses models.Courses) {
+	header := lipgloss.NewStyle().Bold(true)
+	fmt.Printf("%s\n", prefix)
+	fmt.Printf("%s  %s  %s\n", header.Render("emne"), header.Render("semester"), header.Render("tittel"))
+	for _, c := range courses.Courses {
+		fmt.Printf("%s  %s  %s\n", accent.Render(c.Code), subtle.Render(c.Semester), c.Title)
 	}
+}
 
+func cmdAdd(code, semester, title string) {
 	course := models.Course{
-		Code:     args[0],
-		Semester: args[1],
-		Title:    args[2],
+		Code:     code,
+		Semester: semester,
+		Title:    title,
 	}
 
 	courses, err := readCourses()
@@ -56,24 +61,7 @@ func cmdAdd(args []string) {
 	fmt.Printf("%s la til %s %s\n", prefix, accent.Render(course.Code), subtle.Render(course.Semester))
 }
 
-func cmdList(courses models.Courses) {
-	header := lipgloss.NewStyle().Bold(true)
-	fmt.Printf("%s\n", prefix)
-	fmt.Printf("%s  %s  %s\n", header.Render("emne"), header.Render("semester"), header.Render("tittel"))
-	for _, c := range courses.Courses {
-		fmt.Printf("%s  %s  %s\n", accent.Render(c.Code), subtle.Render(c.Semester), c.Title)
-	}
-}
-
-func cmdRemove(args []string) {
-	if len(args) < 2 {
-		fmt.Printf("%s bruk: ififeed remove \"<emnekode>\" \"<semester>\"\n", prefix)
-		return
-	}
-
-	code := args[0]
-	semester := args[1]
-
+func cmdRemove(code, semester string) {
 	courses, err := readCourses()
 	if err != nil {
 		fmt.Println(err)
@@ -106,24 +94,55 @@ func cmdRemove(args []string) {
 }
 
 func main() {
-	args := os.Args
-
-	courses, err := readCourses()
-	if err != nil {
-		fmt.Println(err)
-		return
+	rootCmd := &cobra.Command{
+		Use:   "ififeed",
+		Short: "ifi emnebeskjeder rett i terminalen",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			courses, err := readCourses()
+			if err != nil {
+				return err
+			}
+			runTui(courses)
+			return nil
+		},
 	}
 
-	if len(args) > 1 {
-		switch args[1] {
-		case "list":
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List alle emner i config",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			courses, err := readCourses()
+			if err != nil {
+				return err
+			}
 			cmdList(courses)
-		case "add":
-			cmdAdd(args[2:])
-		case "remove":
-			cmdRemove(args[2:])
-		}
-	} else {
-		runTui(courses)
+			return nil
+		},
+	}
+
+	addCmd := &cobra.Command{
+		Use:   "add <emnekode> <semester> <tittel>",
+		Short: "Legger til et nytt emne du vil få bskjeder fra",
+		Args:  cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmdAdd(args[0], args[1], args[2])
+			return nil
+		},
+	}
+
+	removeCmd := &cobra.Command{
+		Use:   "remove <emnekode> <semester>",
+		Short: "Fjerner et emne du får beskjeder fra",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmdRemove(args[0], args[1])
+			return nil
+		},
+	}
+
+	rootCmd.AddCommand(listCmd, addCmd, removeCmd)
+
+	if err := rootCmd.Execute(); err != nil {
+		os.Exit(1)
 	}
 }
