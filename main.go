@@ -5,8 +5,15 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/willbehn/go-ififeed/feed"
 	"github.com/willbehn/go-ififeed/models"
+)
+
+var (
+	accent = lipgloss.NewStyle().Foreground(lipgloss.Color("39"))
+	subtle = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+	prefix = accent.Render("ififeed") + subtle.Render(":")
 )
 
 func runTui(courses models.Courses) {
@@ -23,7 +30,7 @@ func runTui(courses models.Courses) {
 
 func cmdAdd(args []string) {
 	if len(args) < 3 {
-		fmt.Println("bruk: ififeed add \"<emnekode>\" \"<semester>\" \"<emnetittel>\"")
+		fmt.Printf("%s bruk: ififeed add \"<emnekode>\" \"<semester>\" \"<emnetittel>\"\n", prefix)
 		return
 	}
 
@@ -46,18 +53,21 @@ func cmdAdd(args []string) {
 		return
 	}
 
-	fmt.Printf("la til %s (%s)\n", course.Code, course.Semester)
+	fmt.Printf("%s la til %s %s\n", prefix, accent.Render(course.Code), subtle.Render(course.Semester))
 }
 
 func cmdList(courses models.Courses) {
+	header := lipgloss.NewStyle().Bold(true)
+	fmt.Printf("%s\n", prefix)
+	fmt.Printf("%s  %s  %s\n", header.Render("emne"), header.Render("semester"), header.Render("tittel"))
 	for _, c := range courses.Courses {
-		fmt.Printf("%s\t%s\t%s\n", c.Code, c.Semester, c.Title)
+		fmt.Printf("%s  %s  %s\n", accent.Render(c.Code), subtle.Render(c.Semester), c.Title)
 	}
 }
 
 func cmdRemove(args []string) {
 	if len(args) < 2 {
-		fmt.Println("bruk: ififeed remove \"<emnekode>\" \"<semester>\"")
+		fmt.Printf("%s bruk: ififeed remove \"<emnekode>\" \"<semester>\"\n", prefix)
 		return
 	}
 
@@ -81,7 +91,7 @@ func cmdRemove(args []string) {
 	}
 
 	if !removed {
-		fmt.Printf("fant ikke %s (%s)\n", code, semester)
+		fmt.Printf("%s fant ikke %s %s\n", prefix, accent.Render(code), subtle.Render(semester))
 		return
 	}
 
@@ -92,7 +102,7 @@ func cmdRemove(args []string) {
 		return
 	}
 
-	fmt.Printf("fjernet %s (%s)\n", code, semester)
+	fmt.Printf("%s fjernet %s %s\n", prefix, accent.Render(code), subtle.Render(semester))
 }
 
 func main() {
