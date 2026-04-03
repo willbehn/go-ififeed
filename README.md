@@ -1,6 +1,7 @@
+[![GitHub Release](https://img.shields.io/github/v/release/willbehn/go-ifi-feed)](https://github.com/willbehn/go-ifi-feed/releases/latest)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/willbehn/go-ifi-feed)](go.mod)
+![License](https://img.shields.io/github/license/willbehn/go-ififeed)
 # go-ififeed
-
-![Made with VHS](https://vhs.charm.sh/vhs-5cSeP5vpvW9eqbssNVZlcY.gif)
 
 **ififeed** er et verktøy for deg som er IFI-student og er lei av å
 måtte klikke deg inn på Mine studier eller semestersiden for hvert enkelt
@@ -8,6 +9,8 @@ emne bare for å sjekke nye beskjeder.
 
 Med **ififeed** kan du hente alle beskjeder fra alle emner
 du tar rett i terminalen! Ingen flere avbrekk fra den produktive progge-økta!
+
+![Made with VHS](assets/demo.gif)
 
 ## Kom i gang
 
