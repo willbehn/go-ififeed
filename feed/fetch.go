@@ -9,7 +9,7 @@ import (
 	h2m "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/mmcdole/gofeed"
-	"github.com/willbehn/go-ifi-feed/models"
+	"github.com/willbehn/go-ififeed/models"
 )
 
 type Message struct {

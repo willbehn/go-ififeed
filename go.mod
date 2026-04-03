@@ -1,4 +1,4 @@
-module github.com/willbehn/go-ifi-feed
+module github.com/willbehn/go-ififeed
 
 go 1.24.0
 

@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/willbehn/go-ifi-feed/feed"
-	"github.com/willbehn/go-ifi-feed/models"
+	"github.com/willbehn/go-ififeed/feed"
+	"github.com/willbehn/go-ififeed/models"
 	yaml "gopkg.in/yaml.v3"
 )
 
