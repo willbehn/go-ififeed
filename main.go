@@ -5,15 +5,20 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/willbehn/go-ifi-feed/feed"
 	"github.com/willbehn/go-ifi-feed/models"
 	yaml "gopkg.in/yaml.v3"
 )
 
 func runTui(courses models.Courses) {
-	p := tea.NewProgram(Model{content: CombineMessages(courses)},
-		tea.WithAltScreen(),
-		tea.WithMouseCellMotion())
+	ch := make(chan feed.Message, 50)
+	go feed.FetchStream(courses, ch)
 
+	p := tea.NewProgram(
+		Model{loading: true, msgCh: ch},
+		tea.WithAltScreen(),
+		tea.WithMouseCellMotion(),
+	)
 	p.Run()
 }
 

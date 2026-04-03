@@ -3,7 +3,6 @@ package feed
 import (
 	"fmt"
 	"net/http"
-	"sort"
 	"sync"
 	"time"
 
@@ -62,7 +61,7 @@ func fetchHttpItem(resp *http.Response, course string, title string) string {
 		title,
 	)
 
-	return fmt.Sprintf("<h1>🔔 %s</h1>%s%s", htmlH, htmlCourse, htmlC)
+	return fmt.Sprintf("<h1>%s</h1>%s%s", htmlH, htmlCourse, htmlC)
 }
 
 func ConvertToMarkdown(html string) string {
@@ -101,10 +100,7 @@ func singleFeed(course models.Course) []Message {
 	return results
 }
 
-func Fetch(courses models.Courses) []Message {
-	var results []Message
-
-	msgChannel := make(chan Message)
+func FetchStream(courses models.Courses, out chan<- Message) {
 	var wg sync.WaitGroup
 	wg.Add(len(courses.Courses))
 
@@ -112,23 +108,11 @@ func Fetch(courses models.Courses) []Message {
 		go func(c models.Course) {
 			defer wg.Done()
 			for _, msg := range singleFeed(c) {
-				msgChannel <- msg
+				out <- msg
 			}
 		}(course)
 	}
 
-	go func() {
-		wg.Wait()
-		close(msgChannel)
-	}()
-
-	for m := range msgChannel {
-		results = append(results, m)
-	}
-
-	sort.Slice(results, func(i, j int) bool {
-		return results[i].Timestamp.After(results[j].Timestamp)
-	})
-
-	return results
+	wg.Wait()
+	close(out)
 }

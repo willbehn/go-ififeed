@@ -12,32 +12,62 @@ import (
 	"github.com/willbehn/go-ifi-feed/models"
 )
 
+type itemMsg struct{ content string }
+type doneMsg struct{}
+
 type Model struct {
 	vp      viewport.Model
 	content string
 	ready   bool
+	loading bool
+	msgCh   chan feed.Message
+}
+
+func waitForMsg(ch chan feed.Message) tea.Cmd {
+	return func() tea.Msg {
+		msg, ok := <-ch
+		if !ok {
+			return doneMsg{}
+		}
+		md := feed.ConvertToMarkdown(msg.Content)
+		out, err := glamour.Render(md, "dark")
+		if err != nil {
+			return itemMsg{content: md}
+		}
+		return itemMsg{content: out}
+	}
 }
 
 func (m Model) Init() tea.Cmd {
-	return nil
+	return waitForMsg(m.msgCh)
+}
+
+func banner() string {
+	return lipgloss.NewStyle().Foreground(lipgloss.Color("39")).Bold(true).Render(models.Banner)
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 
+	case itemMsg:
+		m.content += msg.content
+		if m.ready {
+			m.vp.SetContent(banner() + "\n" + m.content)
+		}
+		return m, waitForMsg(m.msgCh)
+
+	case doneMsg:
+		m.loading = false
+		return m, nil
+
 	case tea.WindowSizeMsg:
 		footerLines := 3
-
 		availHeight := max(msg.Height-footerLines, 1)
 
 		if !m.ready {
 			m.vp = viewport.New(msg.Width, availHeight)
 			m.vp.MouseWheelEnabled = true
-
-			style := lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffffff"))
-			colored := style.Render(models.Banner)
-
-			m.vp.SetContent(colored + "\n" + m.content)
+			m.vp.SetContent(banner() + "\n" + m.content)
 			m.ready = true
 		} else {
 			m.vp.Width = msg.Width
@@ -59,25 +89,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) View() string {
 	if !m.ready {
-		return "loading...\n"
+		return "\n  Loading...\n"
 	}
 
-	footer := fmt.Sprintf("\n\n  Scroll: %.0f%% — press q to quit", m.vp.ScrollPercent()*100)
-	return m.vp.View() + footer
-}
+	subtle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+	separator := subtle.Render(strings.Repeat("─", m.vp.Width))
 
-func CombineMessages(courses models.Courses) string {
-	var contents []string
-	for _, message := range feed.Fetch(courses) {
-		contents = append(contents, message.Content)
+	status := "  q quit"
+	if m.loading {
+		status = "  fetching...   q quit"
 	}
+	footer := subtle.Render(fmt.Sprintf("%s   %.0f%%", status, m.vp.ScrollPercent()*100))
 
-	var allMessages = feed.ConvertToMarkdown(strings.Join(contents, ""))
-	out, err := glamour.Render(allMessages, "dark")
-
-	if err != nil {
-		fmt.Println("Error rendering markdown:", err)
-	}
-
-	return out
+	return m.vp.View() + "\n" + separator + "\n" + footer
 }
