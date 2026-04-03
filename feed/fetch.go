@@ -76,6 +76,9 @@ func singleFeed(course models.Course) []Message {
 	var results []Message
 
 	feed := fetchRssFeed(course.Code)
+	if feed == nil {
+		return nil
+	}
 
 	for _, item := range feed.Items {
 		resp, err := httpClient.Get(item.Link)
