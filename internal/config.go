@@ -13,12 +13,12 @@ import (
 const sampleConfig = `
 Courses:
   - code: "IN1000"
-	title: "Introduksjon til objektorientert programmering"
-	semester: h25
+    title: "Introduksjon til objektorientert programmering"
+    semester: h25
 
   - code: "IN1010"
-	title: "Objektorientert programmering"
-	semester: h25
+    title: "Objektorientert programmering"
+    semester: h25
 `
 
 func configPath() (string, error) {
